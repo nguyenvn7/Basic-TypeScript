@@ -1,9 +1,11 @@
 import React from 'react';
 import './App.css';
-import Login from './Components/Forms/Login';
+import Login from './Pages/Authentication/Login';
+import Register from './Pages/Authentication/Register';
+import Routes from './Routes';
 
 function App() {
-  return <Login />;
+  return <Routes />;
 }
 
 export default App;
