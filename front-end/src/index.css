@@ -8,6 +8,9 @@
 .text-dark {
   @apply dark:text-white dark:bg-slate-900 transition duration-500;
 }
+.btn-form {
+  @apply text-white w-full flex align-middle justify-center bg-purple-300 shadow-lg shadow-purple-300/50 py-4 rounded-lg;
+}
 
 body {
   margin: 0;

@@ -1,10 +1,17 @@
 import express, { Application, Request, Response } from "express";
 import { route } from "./Routes";
 import dotenv from "dotenv";
+const cors = require("cors");
 dotenv.config({ path: __dirname + "/.env" });
 const app: Application = express();
 
 app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 
 route(app);
 

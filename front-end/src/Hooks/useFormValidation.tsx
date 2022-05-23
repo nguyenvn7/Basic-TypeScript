@@ -1,49 +1,60 @@
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useCallback, useState } from 'react';
 import { Validation } from '../Models';
 
-function useFormValidation<T extends { a: string }>({
+function useFormValidation<T extends Record<keyof T, any>>({
   validations,
+  initial,
 }: {
   validations: Partial<Record<keyof T, Validation>>;
+  initial?: Partial<T>;
 }) {
-  const [data, setData] = useState<T>({} as T);
+  const [data, setData] = useState<T>((initial || {}) as T);
   const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
-  const handleChange = (key: string) => (e: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (key: keyof T) => (e: ChangeEvent<HTMLInputElement>) => {
+    delete errors[key];
     setData({
       ...data,
       [key]: e.target.value,
     });
   };
-  const handleBlur = () => () => {
-    let valid = true;
+  const check = useCallback((validation: any, value: any, newErrors: any, key: any) => {
+    if (validation?.required?.value && !value) {
+      newErrors[key] = validation?.required?.message;
+    }
+    const pattern = validation?.pattern;
+    if (pattern?.value && !RegExp(pattern.value).test(value)) {
+      newErrors[key] = pattern.message;
+    }
+    const custom = validation?.custom;
+    if (custom?.isValid && !custom.isValid(value)) {
+      newErrors[key] = custom.message;
+    }
+    return newErrors;
+  }, []);
+  const handleBlur = (key: keyof T) => () => {
+    const newErrors: Partial<Record<keyof T, string>> = { ...errors };
+    const value = data[key];
+    const validation = validations[key];
+    delete newErrors[key];
+    check(validation, value, newErrors, key);
+    setErrors(newErrors);
+  };
+
+  const handleCheckSubmit = () => {
     const newErrors: Partial<Record<keyof T, string>> = {};
-    for (const key in validations) {
+    for (const key in data) {
       const value = data[key];
       const validation = validations[key];
-      if (validation?.required?.value && !value) {
-        valid = false;
-        newErrors[key] = validation?.required?.message;
-      }
-
-      const pattern = validation?.pattern;
-      if (pattern?.value && !RegExp(pattern.value).test(value)) {
-        valid = false;
-        newErrors[key] = pattern.message;
-      }
-
-      const custom = validation?.custom;
-      if (custom?.isValid && !custom.isValid(value)) {
-        valid = false;
-        newErrors[key] = custom.message;
-      }
+      check(validation, value, newErrors, key);
     }
-
-    if (!valid) {
-      setErrors(newErrors);
-      return;
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      return false;
     }
+    return true;
   };
-  return { data, handleChange, errors, handleBlur };
+
+  return { data, handleChange, errors, handleBlur, handleCheckSubmit };
 }
 
 export default useFormValidation;

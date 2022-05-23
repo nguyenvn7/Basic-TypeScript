@@ -1,9 +1,12 @@
-import { Input, User } from '../../Models';
-import Bottom from './Bottom';
-import Header from './Header';
+import React from 'react';
 import { BsFillSunFill } from 'react-icons/bs';
+import { RegisterAPI } from '../../Api/Authentication.api';
 import useDarkMode from '../../Hooks/useDarkMode';
 import useFormValidation from '../../Hooks/useFormValidation';
+import { Input, User } from '../../Models';
+import { validateEmail } from '../../Utils/validateEmail';
+import Bottom from './Bottom';
+import Header from './Header';
 
 const inputArray: Input[] = [
   {
@@ -30,18 +33,24 @@ const inputArray: Input[] = [
 
 function Register(): JSX.Element {
   const [isDarkMode, toggleDarkMode] = useDarkMode();
-  const { data, handleChange, handleBlur } = useFormValidation<User>({
+  const { data, handleChange, handleBlur, errors, handleCheckSubmit } = useFormValidation<User>({
     validations: {
       userName: {
-        pattern: {
-          value: '^[A-Za-z]*$',
-          message: "You're not allowed to...",
+        required: {
+          value: true,
+          message: 'This field is required',
+        },
+      },
+      account: {
+        custom: {
+          isValid: (value: string) => validateEmail(value),
+          message: 'The account is invalid',
         },
       },
       phoneNumber: {
         custom: {
-          isValid: (value) => parseInt(value, 10) > 17,
-          message: 'You have to be at least 18 years old.',
+          isValid: (value) => value?.length === 10,
+          message: 'Your phone number has at least 10 digits',
         },
       },
       password: {
@@ -50,16 +59,28 @@ function Register(): JSX.Element {
           message: 'This field is required',
         },
         custom: {
-          isValid: (value) => value.length > 6,
-          message: 'The password needs to be at...',
+          isValid: (value) => value?.length > 6,
+          message: 'The password needs has at least 6 characters',
         },
       },
     },
+    initial: {
+      userName: '',
+      password: '',
+      account: '',
+      phoneNumber: '',
+    },
   });
+
+  const handleSubmit = () => {
+    if (handleCheckSubmit() !== false) {
+      RegisterAPI(data).then((res) => console.log(res?.status));
+    }
+  };
 
   return (
     <section className="pt-4 h-full overflow-hidden text-dark">
-      <section className="font-Poppins mt-4 mb-12 mx-4 md:mx-8 xl:mx-44 lg:flex lg:h-screen ">
+      <section className="font-Poppins mt-4 mb-14 mx-4 md:mx-8 xl:mx-44 lg:flex lg:h-screen ">
         <div className="flex justify-between gap-4">
           <div className="font-semibold text-lg ">Your Logo</div>
           <div>
@@ -78,18 +99,29 @@ function Register(): JSX.Element {
               <div className="flex flex-col gap-9 mb-4">
                 {inputArray.map(
                   (value): JSX.Element => (
-                    <input
-                      {...value}
-                      onChange={handleChange(value.key)}
-                      onBlur={handleBlur()}
-                      className="input-form"
-                    />
+                    <div className="flex flex-col gap-2" key={value.key}>
+                      <input
+                        {...value}
+                        onChange={handleChange(value.key as keyof User)}
+                        onBlur={handleBlur(value.key as keyof User)}
+                        className="input-form"
+                      />
+                      {errors[value.key as keyof User] && (
+                        <p className="text-sm text-red-500">{errors[value.key as keyof User]}</p>
+                      )}
+                    </div>
                   )
                 )}
               </div>
               <div className="text-sm text-gray-500 text-right">Forgor password ?</div>
             </div>
-            <button className="text-white w-full bg-purple-300 shadow-lg shadow-purple-300/50 py-4 rounded-lg">
+            <button
+              className={`btn-form ${
+                (Object.keys(errors).length > 0 && 'cursor-not-allowed opacity-50') ||
+                'cursor-pointer'
+              }`}
+              onClick={handleSubmit}
+            >
               Register
             </button>
             <Bottom />
