@@ -1,8 +1,8 @@
 import { User } from '../Models';
 
-export async function LoginAPI(payload: { userName: string; password: string }) {
+export async function loginAPI(payload: { account: string; password: string }) {
   try {
-    return await fetch('http://localhost:8080/api/login', {
+    return await fetch(`${process.env.REACT_APP_URL}/api/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -16,9 +16,9 @@ export async function LoginAPI(payload: { userName: string; password: string }) 
     console.log('🚀 ~ file: Authentication.api.tsx ~ line 14 ~ LoginAPI ~ err', err);
   }
 }
-export async function RegisterAPI(payload: User) {
+export async function registerAPI(payload: User) {
   try {
-    return await fetch('http://localhost:8080/api/register', {
+    return await fetch(`${process.env.REACT_APP_URL}/api/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -32,3 +32,5 @@ export async function RegisterAPI(payload: User) {
     console.log('🚀 ~ file: Authentication.api.tsx ~ line 14 ~ LoginAPI ~ err', err);
   }
 }
+
+export function RefreshToken() {}

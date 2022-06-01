@@ -1,6 +1,8 @@
 import { useRoutes } from 'react-router-dom';
+import { ProtectedRouter } from '../Middlewares/Protected.Router';
 import Login from '../Pages/Authentication/Login';
 import Register from '../Pages/Authentication/Register';
+import BoxMessages from '../Pages/Messages/Box';
 
 const Routes = () => {
   const routes = useRoutes([
@@ -11,6 +13,14 @@ const Routes = () => {
     {
       path: '/Register',
       element: <Register />,
+    },
+    {
+      path: '/Messages',
+      element: (
+        <ProtectedRouter>
+          <BoxMessages />
+        </ProtectedRouter>
+      ),
     },
     {
       path: '*',

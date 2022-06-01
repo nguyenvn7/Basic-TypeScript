@@ -1,14 +1,18 @@
+import { FormEvent, useEffect } from 'react';
 import { BsFillSunFill } from 'react-icons/bs';
+import { useLocation } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import { loginAPI, RefreshToken } from '../../Api/Authentication.api';
 import useDarkMode from '../../Hooks/useDarkMode';
-import useFetchAPI from '../../Hooks/useFetchAPI';
 import useFormValidation from '../../Hooks/useFormValidation';
 import { User } from '../../Models';
+import { config } from '../../Utils/toast.config';
 import Bottom from './Bottom';
 import Header from './Header';
 
 function Login(): JSX.Element {
   const [isDarkMode, toggleDarkMode] = useDarkMode();
-  const { data, handleChange, handleBlur, errors } = useFormValidation<User>({
+  const { data, handleChange, handleBlur, errors, handleCheckEmpty } = useFormValidation<User>({
     validations: {
       account: {
         required: {
@@ -23,7 +27,44 @@ function Login(): JSX.Element {
         },
       },
     },
+    initial: {
+      account: '',
+      password: '',
+    },
   });
+  const { state } = useLocation() as { state: { success?: boolean } };
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (handleCheckEmpty() !== false) {
+      loginAPI(data)
+        .then((res) => res?.json())
+        .then((res) => {
+          switch (res?.message) {
+            case 'Bad Request':
+              toast.error('The user name or password is incorrect', config);
+              break;
+            case 'Expired':
+              RefreshToken();
+              break;
+          }
+        });
+    }
+  };
+
+  useEffect(() => {
+    if (state?.success) {
+      toast.success('Successful registration', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,
+      });
+      window.history.replaceState(null, '');
+    }
+  }, []);
 
   return (
     <section className=" pt-4 h-full overflow-hidden text-dark">
@@ -40,8 +81,8 @@ function Login(): JSX.Element {
         </div>
 
         <section className="lg:flex lg:flex-row lg:items-center mt-10 gap-10 flex-1 ">
-          <Header type="Login" path="/Register" />
-          <div className="flex-1">
+          <Header type="Register" path="/Register" />
+          <form className="flex-1" onSubmit={handleSubmit}>
             <div className="mb-11">
               <div className="text-3xl font-medium mb-7">Sign In</div>
               <div className="flex flex-col gap-9 mb-4">
@@ -68,7 +109,6 @@ function Login(): JSX.Element {
               </div>
               <div className="text-sm text-gray-500 text-right">Forgor password ?</div>
             </div>
-            <div></div>
             <button
               className={`btn-form ${
                 (Object.keys(errors).length > 0 && 'cursor-not-allowed opacity-50') ||
@@ -78,9 +118,10 @@ function Login(): JSX.Element {
               Login
             </button>
             <Bottom />
-          </div>
+          </form>
         </section>
       </section>
+      <ToastContainer pauseOnFocusLoss={false} />
     </section>
   );
 }

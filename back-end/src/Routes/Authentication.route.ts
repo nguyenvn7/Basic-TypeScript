@@ -1,27 +1,8 @@
-import { Request, Response, Router } from "express";
+import { Router } from "express";
+import { login, register } from "../Controllers/Authentication.controller";
+import { verifyToken } from "../Middlewares/VerifyToken";
+
 const router = Router();
 
-interface Login {
-  userName: string;
-  password: string;
-}
-export interface User {
-  userID: string;
-  account: string;
-  userName: string;
-  password: string;
-  phoneNumber: string;
-}
-
-router
-  .post("/api/login", (req: Request, res: Response) => {
-    const { userName = "", password = "" }: Login = req.body.payload;
-    console.log(userName, password);
-    res.send("200");
-  })
-  .post("/api/register", (req: Request, res: Response) => {
-    const payload: User = req.body.payload;
-    console.log("payload", payload.account);
-    res.send("200");
-  });
+router.post("/api/login", verifyToken, login).post("/api/register", register);
 export default router;

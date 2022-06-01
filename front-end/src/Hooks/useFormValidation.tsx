@@ -17,7 +17,7 @@ function useFormValidation<T extends Record<keyof T, any>>({
       [key]: e.target.value,
     });
   };
-  const check = useCallback((validation: any, value: any, newErrors: any, key: any) => {
+  const validate = useCallback((validation: any, value: any, newErrors: any, key: any) => {
     if (validation?.required?.value && !value) {
       newErrors[key] = validation?.required?.message;
     }
@@ -29,23 +29,22 @@ function useFormValidation<T extends Record<keyof T, any>>({
     if (custom?.isValid && !custom.isValid(value)) {
       newErrors[key] = custom.message;
     }
-    return newErrors;
   }, []);
   const handleBlur = (key: keyof T) => () => {
     const newErrors: Partial<Record<keyof T, string>> = { ...errors };
     const value = data[key];
     const validation = validations[key];
     delete newErrors[key];
-    check(validation, value, newErrors, key);
+    validate(validation, value, newErrors, key);
     setErrors(newErrors);
   };
 
-  const handleCheckSubmit = () => {
+  const handleCheckEmpty = () => {
     const newErrors: Partial<Record<keyof T, string>> = {};
     for (const key in data) {
       const value = data[key];
       const validation = validations[key];
-      check(validation, value, newErrors, key);
+      validate(validation, value, newErrors, key);
     }
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
@@ -54,7 +53,7 @@ function useFormValidation<T extends Record<keyof T, any>>({
     return true;
   };
 
-  return { data, handleChange, errors, handleBlur, handleCheckSubmit };
+  return { data, handleChange, errors, setErrors, handleBlur, handleCheckEmpty };
 }
 
 export default useFormValidation;

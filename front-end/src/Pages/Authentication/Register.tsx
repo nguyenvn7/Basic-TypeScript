@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { FormEvent } from 'react';
 import { BsFillSunFill } from 'react-icons/bs';
-import { RegisterAPI } from '../../Api/Authentication.api';
+import { useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import { registerAPI } from '../../Api/Authentication.api';
 import useDarkMode from '../../Hooks/useDarkMode';
 import useFormValidation from '../../Hooks/useFormValidation';
 import { Input, User } from '../../Models';
+import { config } from '../../Utils/toast.config';
 import { validateEmail } from '../../Utils/validateEmail';
 import Bottom from './Bottom';
 import Header from './Header';
@@ -33,48 +36,35 @@ const inputArray: Input[] = [
 
 function Register(): JSX.Element {
   const [isDarkMode, toggleDarkMode] = useDarkMode();
-  const { data, handleChange, handleBlur, errors, handleCheckSubmit } = useFormValidation<User>({
-    validations: {
-      userName: {
-        required: {
-          value: true,
-          message: 'This field is required',
-        },
+  const navigate = useNavigate();
+  const { data, handleChange, handleBlur, errors, setErrors, handleCheckEmpty } =
+    useFormValidation<User>({
+      validations: {},
+      initial: {
+        userName: '',
+        password: '',
+        account: '',
+        phoneNumber: '',
       },
-      account: {
-        custom: {
-          isValid: (value: string) => validateEmail(value),
-          message: 'The account is invalid',
-        },
-      },
-      phoneNumber: {
-        custom: {
-          isValid: (value) => value?.length === 10,
-          message: 'Your phone number has at least 10 digits',
-        },
-      },
-      password: {
-        required: {
-          value: true,
-          message: 'This field is required',
-        },
-        custom: {
-          isValid: (value) => value?.length > 6,
-          message: 'The password needs has at least 6 characters',
-        },
-      },
-    },
-    initial: {
-      userName: '',
-      password: '',
-      account: '',
-      phoneNumber: '',
-    },
-  });
+    });
 
-  const handleSubmit = () => {
-    if (handleCheckSubmit() !== false) {
-      RegisterAPI(data).then((res) => console.log(res?.status));
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (handleCheckEmpty() !== false) {
+      registerAPI(data).then((res) => {
+        switch (res?.status) {
+          case 200:
+            navigate('/login', {
+              state: {
+                success: true,
+              },
+            });
+            break;
+          case 500:
+            toast.error('Server error, try later', config);
+            break;
+        }
+      });
     }
   };
 
@@ -92,8 +82,8 @@ function Register(): JSX.Element {
           </div>
         </div>
         <section className="lg:flex lg:flex-row lg:items-center mt-10 gap-10 flex-1 ">
-          <Header type="Register" path="/Login" />
-          <div className="flex-1">
+          <Header type="Login" path="/Login" />
+          <form onSubmit={handleSubmit} className="flex-1">
             <div className="mb-11">
               <div className="text-3xl font-medium mb-7">Sign Up</div>
               <div className="flex flex-col gap-9 mb-4">
@@ -125,9 +115,10 @@ function Register(): JSX.Element {
               Register
             </button>
             <Bottom />
-          </div>
+          </form>
         </section>
       </section>
+      <ToastContainer pauseOnFocusLoss={false} />
     </section>
   );
 }

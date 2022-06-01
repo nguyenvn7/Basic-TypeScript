@@ -1,7 +1,6 @@
 import React from 'react';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
-import Login from './Pages/Authentication/Login';
-import Register from './Pages/Authentication/Register';
 import Routes from './Routes';
 function App() {
   return <Routes />;
